@@ -1,0 +1,24 @@
+{
+  "name": "maple-party",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JeYeongR/maple-party.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JeYeongR/maple-party/issues"
+  },
+  "homepage": "https://github.com/JeYeongR/maple-party#readme",
+  "description": "",
+  "dependencies": {
+    "discord.js": "^14.20.0",
+    "dotenv": "^16.5.0"
+  }
+}
