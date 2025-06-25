@@ -77,22 +77,17 @@ const search = async (query) => {
 };
 
 const formatCombatPower = (num) => {
-  const eok = 100000000;
-  const man = 10000;
+  let result = `${Math.floor(num % 10000)}`;
 
-  if (num >= eok) {
-    const eokVal = Math.floor(num / eok);
-    const manVal = Math.floor((num % eok) / man);
-    if (manVal > 0) {
-      return `${eokVal}억 ${manVal}만`;
-    }
-    return `${eokVal}억`;
+  if (num > 10000) {
+    result = `${Math.floor(num / 10000)}만 ` + result;
   }
-  if (num >= man) {
-    const manVal = Math.floor(num / man);
-    return `${manVal}만`;
+
+  if (num > 100000000) {
+    result = `${Math.floor(num / 100000000)}억 ` + result;
   }
-  return num;
+
+  return result;
 };
 
 module.exports = {

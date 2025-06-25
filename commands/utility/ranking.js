@@ -1,9 +1,28 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+
+const dbPath = path.join(__dirname, '..', '..', 'db.json');
+
+const formatCombatPower = (num) => {
+  let result = `${Math.floor(num % 10000)}`;
+
+  if (num > 10000) {
+    result = `${Math.floor(num / 10000)}만 ` + result;
+  }
+
+  if (num > 100000000) {
+    result = `${Math.floor(num / 100000000)}억 ` + result;
+  }
+
+  return result;
+};
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('유저목록')
-    .setDescription('현재 음성 채널에 있는 유저 목록을 보여줍니다.'),
+    .setName('랭킹')
+    .setDescription('등록된 유저의 랭킹을 보여줍니다.'),
   async execute(interaction) {
     const voiceChannel = interaction.member.voice.channel;
 
@@ -11,10 +30,70 @@ module.exports = {
       return interaction.reply({ content: '먼저 음성 채널에 참여해주세요!', ephemeral: true });
     }
 
-    const memberNames = voiceChannel.members.map(member => member.displayName);
+    let db = {};
+    if (fs.existsSync(dbPath)) {
+      const data = fs.readFileSync(dbPath, 'utf8');
+      if (data) {
+        db = JSON.parse(data);
+      }
+    }
 
-    const userList = memberNames.join(', ');
+    let isAllRegistered = true;
+    let notRegisteredUser = [];
+    const mapleIds = voiceChannel.members.map(member => {
+      if (!db[member.id]) {
+        isAllRegistered = false;
+        notRegisteredUser.push(member.user.globalName);
+        return;
+      }
+      return db[member.id];
+    });
 
-    await interaction.reply(`'${voiceChannel.name}' 채널에 있는 유저: ${userList}`);
+    const result = await Promise.all(mapleIds.map(async (mapleId) => {
+      const ocidResponse = await axios.get(`https://open.api.nexon.com/maplestory/v1/id?character_name=${encodeURIComponent(mapleId)}`, {
+        headers: {
+          'x-nxopen-api-key': process.env.NEXON_API_KEY,
+        },
+      });
+
+      if (!ocidResponse.data || !ocidResponse.data.ocid) {
+        console.warn(`OCID not found for character: ${mapleId}. API Response:`, ocidResponse.data);
+        return { error: 'NOT_FOUND', message: '캐릭터를 찾을 수 없습니다. 철자를 확인해주세요.' };
+      }
+      const ocid = ocidResponse.data.ocid;
+
+      const statInfoResponse = await axios.get(`https://open.api.nexon.com/maplestory/v1/character/stat?ocid=${ocid}`, {
+        headers: {
+          'x-nxopen-api-key': process.env.NEXON_API_KEY,
+        },
+      });
+
+      if (!statInfoResponse.data) {
+        console.error('No basic info returned for OCID:', ocid, 'API Response:', statInfoResponse.data);
+        return { error: 'API_ERROR', message: '캐릭터 스텟 정보를 가져오는데 실패했습니다.' };
+      }
+
+      const finalStat = statInfoResponse.data.final_stat;
+      let combatPower = 0;
+      finalStat.map((stat) => {
+        if (stat.stat_name == '전투력') {
+          combatPower = stat.stat_value;
+        }
+      });
+
+      return {
+        mapleId,
+        combatPower,
+      }
+    }));
+
+    result.sort((a, b) => b.combatPower - a.combatPower);
+
+    const embed = new EmbedBuilder()
+      .setColor(0x0099FF)
+      .setTitle('랭킹')
+      .setDescription(result.map((user, index) => `${index + 1}. ${user.mapleId} - ${formatCombatPower(user.combatPower)}`).join('\n'));
+
+    await interaction.reply(isAllRegistered ? { embeds: [embed] } : { content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUser.join(', ')}]`, ephemeral: true });
   },
 };
