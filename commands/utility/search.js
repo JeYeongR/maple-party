@@ -116,14 +116,11 @@ module.exports = {
       });
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle(`${displayName}님의 정보`)
+        .setAuthor({ name: `${displayName}님의 정보`, iconURL: result.basicInfo.character_image || null })
         .addFields(
           { name: '레벨', value: `${result.basicInfo.character_level || '정보 없음'}`, inline: true },
           { name: '직업', value: `${result.basicInfo.character_class || '정보 없음'}`, inline: true },
           { name: '서버', value: `${result.basicInfo.world_name || '정보 없음'}`, inline: true },
-        )
-        .setImage(result.basicInfo.character_image || null)
-        .addFields(
           { name: '전투력', value: `${combatPower || '정보 없음'}`, inline: true },
         )
         .setTimestamp()
