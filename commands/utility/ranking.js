@@ -22,7 +22,15 @@ const formatCombatPower = (num) => {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('랭킹')
-    .setDescription('등록된 유저의 랭킹을 보여줍니다.'),
+    .setDescription('등록된 유저의 랭킹을 보여줍니다.')
+    .addStringOption(option =>
+      option.setName('기준')
+        .setDescription('기준으로 랭킹을 보여줍니다.')
+        .addChoices(
+          { name: '전투력', value: 'combat_power' },
+          { name: '레벨', value: 'level' },
+        )
+        .setRequired(true)),
   async execute(interaction) {
     const voiceChannel = interaction.member.voice.channel;
 
@@ -73,6 +81,17 @@ module.exports = {
         return { error: 'API_ERROR', message: '캐릭터 스텟 정보를 가져오는데 실패했습니다.' };
       }
 
+      const basicInfoResponse = await axios.get(`https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${ocid}`, {
+        headers: {
+          'x-nxopen-api-key': process.env.NEXON_API_KEY,
+        },
+      });
+
+      if (!basicInfoResponse.data) {
+        console.error('No basic info returned for OCID:', ocid, 'API Response:', basicInfoResponse.data);
+        return { error: 'API_ERROR', message: '캐릭터 기본 정보를 가져오는데 실패했습니다.' };
+      }
+
       const finalStat = statInfoResponse.data.final_stat;
       let combatPower = 0;
       finalStat.map((stat) => {
@@ -84,15 +103,25 @@ module.exports = {
       return {
         mapleId,
         combatPower,
+        character_level: basicInfoResponse.data.character_level,
+        character_exp_rate: basicInfoResponse.data.character_exp_rate,
       }
     }));
 
     result.sort((a, b) => b.combatPower - a.combatPower);
 
+    let description = "";
+
+    if (interaction.options.getString('기준') == 'combat_power') {
+      description = result.map((user, index) => `${index + 1}. ${user.mapleId} - ${formatCombatPower(user.combatPower)}`).join('\n')
+    } else if (interaction.options.getString('기준') == 'level') {
+      description = result.map((user, index) => `${index + 1}. ${user.mapleId} - Lv. ${user.character_level} (${user.character_exp_rate}%)`).join('\n')
+    }
+
     const embed = new EmbedBuilder()
       .setColor(0x0099FF)
-      .setTitle('랭킹')
-      .setDescription(result.map((user, index) => `${index + 1}. ${user.mapleId} - ${formatCombatPower(user.combatPower)}`).join('\n'));
+      .setTitle(`${interaction.options.getString('기준') == 'combat_power' ? '전투력' : '레벨'} 랭킹`)
+      .setDescription(description);
 
     await interaction.reply(isAllRegistered ? { embeds: [embed] } : { content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUser.join(', ')}]` });
   },
