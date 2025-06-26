@@ -11,11 +11,12 @@ const WORLD_ICONS = {
   '엘리시움': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_13.png',
   '아케인': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_14.png',
   '노바': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_15.png',
-  '리부트': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_1.png',
-  '리부트2': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_1.png',
-  '버닝': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_16.png',
-  '버닝2': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_17.png',
-  '버닝3': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_18.png',
+  '챌린저스': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_20.png',
+  '챌린저스2': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_20.png',
+  '챌린저스3': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_20.png',
+  '챌린저스4': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_20.png',
+  '에오스': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_3.png',
+  '핼리오스': 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/world_icon/icon_2.png',
 };
 
 const MAIN_COLOR = '#FEDDEE';
