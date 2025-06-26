@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const http = require('node:http');
 
 require('dotenv').config();
 
@@ -27,5 +28,16 @@ for (const file of eventFiles) {
     client.on(event.name, (...args) => event.execute(...args));
   }
 }
+
+// Render.com 수면 방지용 웹 서버
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is alive!');
+});
+
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+  console.log(`Health check server running on port ${port}`);
+});
 
 client.login(process.env.DISCORD_TOKEN);
