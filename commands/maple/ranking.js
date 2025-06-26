@@ -37,11 +37,9 @@ module.exports = {
         )
         .setRequired(true)),
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
-
     const voiceChannel = interaction.member.voice.channel;
     if (!voiceChannel) {
-      return interaction.editReply({ content: '먼저 음성 채널에 참여해주세요!' });
+      return interaction.reply({ content: '먼저 음성 채널에 참여해주세요!', ephemeral: true });
     }
 
     const db = readDB();
@@ -52,8 +50,10 @@ module.exports = {
       .map(member => member.user.globalName);
 
     if (notRegisteredUsers.length > 0) {
-      return interaction.editReply({ content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUsers.join(', ')}]` });
+      return interaction.reply({ content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUsers.join(', ')}]`, ephemeral: true });
     }
+
+    await interaction.deferReply();
 
     const characterNames = members.map(member => db[member.id]);
     const sortBy = interaction.options.getString('기준');
