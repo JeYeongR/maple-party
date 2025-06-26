@@ -94,6 +94,6 @@ module.exports = {
       .setTitle('랭킹')
       .setDescription(result.map((user, index) => `${index + 1}. ${user.mapleId} - ${formatCombatPower(user.combatPower)}`).join('\n'));
 
-    await interaction.reply(isAllRegistered ? { embeds: [embed] } : { content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUser.join(', ')}]`, ephemeral: true });
+    await interaction.reply(isAllRegistered ? { embeds: [embed] } : { content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUser.join(', ')}]` });
   },
 };

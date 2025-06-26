@@ -133,6 +133,7 @@ module.exports = {
       const serverName = result.basicInfo.world_name || '정보 없음';
       const serverIcon = worldIcons[serverName] || null;
 
+      console.log(result.basicInfo);
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
         .setAuthor({ name: `${displayName}님의 정보`, iconURL: serverIcon })
