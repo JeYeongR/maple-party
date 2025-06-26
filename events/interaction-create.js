@@ -12,6 +12,12 @@ module.exports = {
 			return;
 		}
 
+		if (interaction.guild) {
+			console.log(`[COMMAND] /${interaction.commandName} used by (${interaction.user.globalName}) ${interaction.user.tag} in ${interaction.guild.name}#${interaction.channel.name}`);
+		} else {
+			console.log(`[COMMAND] /${interaction.commandName} used by (${interaction.user.globalName}) ${interaction.user.tag} in DMs`);
+		}
+
 		try {
 			await command.execute(interaction);
 		} catch (error) {
