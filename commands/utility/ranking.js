@@ -1,22 +1,27 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+const { getBasicInfoByName, getStatInfoByName } = require('../../utils/nexon-api');
+const { readDB } = require('../../utils/db');
+const { MAIN_COLOR } = require('../../utils/constants');
+const { formatCombatPower } = require('../../utils/formatting');
 
-const dbPath = path.join(__dirname, '..', '..', 'db.json');
-
-const formatCombatPower = (num) => {
-  let result = `${Math.floor(num % 10000)}`;
-
-  if (num > 10000) {
-    result = `${Math.floor(num / 10000)}만 ` + result;
-  }
-
-  if (num > 100000000) {
-    result = `${Math.floor(num / 100000000)}억 ` + result;
-  }
-
-  return result;
+const rankingStrategies = {
+  combat_power: {
+    fetcher: getStatInfoByName,
+    sorter: (a, b) => b.combatPower - a.combatPower,
+    formatter: (user, index) => `${index + 1}. ${user.characterName} - ${formatCombatPower(user.combatPower)}`,
+    title: '전투력 랭킹 (상위 10명)',
+  },
+  level: {
+    fetcher: getBasicInfoByName,
+    sorter: (a, b) => {
+      if (b.character_level === a.character_level) {
+        return parseFloat(b.character_exp_rate) - parseFloat(a.character_exp_rate);
+      }
+      return b.character_level - a.character_level;
+    },
+    formatter: (user, index) => `${index + 1}. ${user.characterName} - Lv. ${user.character_level} (${user.character_exp_rate}%)`,
+    title: '레벨 랭킹 (상위 10명)',
+  },
 };
 
 module.exports = {
@@ -32,97 +37,52 @@ module.exports = {
         )
         .setRequired(true)),
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const voiceChannel = interaction.member.voice.channel;
-
     if (!voiceChannel) {
-      return interaction.reply({ content: '먼저 음성 채널에 참여해주세요!', ephemeral: true });
+      return interaction.editReply({ content: '먼저 음성 채널에 참여해주세요!' });
     }
 
-    let db = {};
-    if (fs.existsSync(dbPath)) {
-      const data = fs.readFileSync(dbPath, 'utf8');
-      if (data) {
-        db = JSON.parse(data);
-      }
+    const db = readDB();
+    const members = voiceChannel.members;
+
+    const notRegisteredUsers = members
+      .filter(member => !db[member.id])
+      .map(member => member.user.globalName);
+
+    if (notRegisteredUsers.length > 0) {
+      return interaction.editReply({ content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUsers.join(', ')}]` });
     }
 
-    let isAllRegistered = true;
-    let notRegisteredUser = [];
-    const mapleIds = voiceChannel.members.map(member => {
-      if (!db[member.id]) {
-        isAllRegistered = false;
-        notRegisteredUser.push(member.user.globalName);
-        return;
-      }
-      return db[member.id];
-    });
+    const characterNames = members.map(member => db[member.id]);
+    const sortBy = interaction.options.getString('기준');
+    const strategy = rankingStrategies[sortBy];
 
-    const result = await Promise.all(mapleIds.map(async (mapleId) => {
-      const ocidResponse = await axios.get(`https://open.api.nexon.com/maplestory/v1/id?character_name=${encodeURIComponent(mapleId)}`, {
-        headers: {
-          'x-nxopen-api-key': process.env.NEXON_API_KEY,
-        },
-      });
+    const results = await Promise.all(characterNames.map(characterName => strategy.fetcher(characterName)));
+    const validResults = results.filter(r => r && !r.error);
+    const errorMessages = results.filter(r => r && r.error).map(r => r.message);
 
-      if (!ocidResponse.data || !ocidResponse.data.ocid) {
-        console.warn(`OCID not found for character: ${mapleId}. API Response:`, ocidResponse.data);
-        return { error: 'NOT_FOUND', message: '캐릭터를 찾을 수 없습니다. 철자를 확인해주세요.' };
-      }
-      const ocid = ocidResponse.data.ocid;
-
-      const statInfoResponse = await axios.get(`https://open.api.nexon.com/maplestory/v1/character/stat?ocid=${ocid}`, {
-        headers: {
-          'x-nxopen-api-key': process.env.NEXON_API_KEY,
-        },
-      });
-
-      if (!statInfoResponse.data) {
-        console.error('No basic info returned for OCID:', ocid, 'API Response:', statInfoResponse.data);
-        return { error: 'API_ERROR', message: '캐릭터 스텟 정보를 가져오는데 실패했습니다.' };
-      }
-
-      const basicInfoResponse = await axios.get(`https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${ocid}`, {
-        headers: {
-          'x-nxopen-api-key': process.env.NEXON_API_KEY,
-        },
-      });
-
-      if (!basicInfoResponse.data) {
-        console.error('No basic info returned for OCID:', ocid, 'API Response:', basicInfoResponse.data);
-        return { error: 'API_ERROR', message: '캐릭터 기본 정보를 가져오는데 실패했습니다.' };
-      }
-
-      const finalStat = statInfoResponse.data.final_stat;
-      let combatPower = 0;
-      finalStat.map((stat) => {
-        if (stat.stat_name == '전투력') {
-          combatPower = stat.stat_value;
-        }
-      });
-
-      return {
-        mapleId,
-        combatPower,
-        character_level: basicInfoResponse.data.character_level,
-        character_exp_rate: basicInfoResponse.data.character_exp_rate,
-      }
-    }));
-
-    result.sort((a, b) => b.combatPower - a.combatPower);
-
-    let description = "";
-
-    if (interaction.options.getString('기준') == 'combat_power') {
-      description = result.map((user, index) => `${index + 1}. ${user.mapleId} - ${formatCombatPower(user.combatPower)}`).join('\n')
-    } else if (interaction.options.getString('기준') == 'level') {
-      description = result.map((user, index) => `${index + 1}. ${user.mapleId} - Lv. ${user.character_level} (${user.character_exp_rate}%)`).join('\n')
+    if (errorMessages.length > 0) {
+      await interaction.followUp({ content: `오류가 발생했습니다:\n${errorMessages.join('\n')}`, ephemeral: true });
     }
+
+    if (validResults.length === 0) {
+      return interaction.editReply({ content: '랭킹을 표시할 유저 정보가 없습니다.' });
+    }
+
+    validResults.sort(strategy.sorter);
+
+    const description = validResults
+      .slice(0, 10)
+      .map(strategy.formatter)
+      .join('\n');
 
     const embed = new EmbedBuilder()
-      .setColor('#FEDDEE')
-      .setTitle(`${interaction.options.getString('기준') == 'combat_power' ? '전투력' : '레벨'} 랭킹`)
-      .setDescription(description);
+      .setColor(MAIN_COLOR)
+      .setTitle(strategy.title)
+      .setDescription(description || '랭킹 정보가 없습니다.');
 
-    await interaction.reply(isAllRegistered ? { embeds: [embed] } : { content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUser.join(', ')}]` });
+    await interaction.editReply({ embeds: [embed] });
   },
 };

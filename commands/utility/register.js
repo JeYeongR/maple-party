@@ -1,8 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-
-const dbPath = path.join(__dirname, '..', '..', 'db.json');
+const { readDB, writeDB } = require('../../utils/db');
+const { getFullDataByName } = require('../../utils/nexon-api');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,21 +11,21 @@ module.exports = {
         .setDescription('등록할 메이플 아이디')
         .setRequired(true)),
   async execute(interaction) {
-    const mapleId = interaction.options.getString('아이디');
+    await interaction.deferReply({ ephemeral: true });
+
+    const characterName = interaction.options.getString('아이디');
     const discordId = interaction.user.id;
 
-    let db = {};
-    if (fs.existsSync(dbPath)) {
-      const data = fs.readFileSync(dbPath, 'utf8');
-      if (data) {
-        db = JSON.parse(data);
-      }
+    const characterData = await getFullDataByName(characterName);
+
+    if (characterData.error) {
+      return interaction.editReply({ content: characterData.message });
     }
 
-    db[discordId] = mapleId;
+    const db = readDB();
+    db[discordId] = characterData.characterName;
+    writeDB(db);
 
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-
-    await interaction.reply({ content: `'${mapleId}'(으)로 메이플 아이디 등록이 완료되었습니다!`, ephemeral: true });
+    await interaction.editReply({ content: `'${characterData.characterName}'(으)로 메이플 아이디 등록이 완료되었습니다!` });
   },
 };
