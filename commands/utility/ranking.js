@@ -119,7 +119,7 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
+      .setColor('#FEDDEE')
       .setTitle(`${interaction.options.getString('기준') == 'combat_power' ? '전투력' : '레벨'} 랭킹`)
       .setDescription(description);
 

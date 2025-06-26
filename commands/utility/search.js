@@ -135,7 +135,7 @@ module.exports = {
 
       console.log(result.basicInfo);
       const embed = new EmbedBuilder()
-        .setColor(0x0099FF)
+        .setColor('#FEDDEE')
         .setAuthor({ name: `${displayName}님의 정보`, iconURL: serverIcon })
         .addFields(
           { name: '레벨', value: `${result.basicInfo.character_level || '정보 없음'}`, inline: true },
@@ -143,8 +143,6 @@ module.exports = {
           { name: '전투력', value: `${combatPower || '정보 없음'}`, inline: true },
         )
         .setThumbnail(result.basicInfo.character_image || null)
-        .setTimestamp()
-        .setFooter({ text: 'MapleStory 캐릭터 정보', iconURL: 'https://ssl.nexon.com/s2/game/maplestory/renewal/common/logo.png' });
 
       await interaction.reply({ embeds: [embed] });
     } else {
