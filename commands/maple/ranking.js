@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 const { getBasicInfoByName, getStatInfoByName } = require('../../utils/nexon-api');
 const { readDB } = require('../../utils/db');
 const { MAIN_COLOR } = require('../../utils/constants');
@@ -39,7 +39,7 @@ module.exports = {
   async execute(interaction) {
     const voiceChannel = interaction.member.voice.channel;
     if (!voiceChannel) {
-      return interaction.reply({ content: '먼저 음성 채널에 참여해주세요!', ephemeral: true });
+      return interaction.reply({ content: '먼저 음성 채널에 참여해주세요!', flags: MessageFlags.Ephemeral });
     }
 
     const db = readDB();
@@ -50,7 +50,7 @@ module.exports = {
       .map(member => member.user.globalName);
 
     if (notRegisteredUsers.length > 0) {
-      return interaction.reply({ content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUsers.join(', ')}]`, ephemeral: true });
+      return interaction.reply({ content: `"/등록" 명령어로 아이디를 모두 등록해주세요! [${notRegisteredUsers.join(', ')}]`, flags: MessageFlags.Ephemeral });
     }
 
     await interaction.deferReply();
@@ -64,11 +64,11 @@ module.exports = {
     const errorMessages = results.filter(r => r && r.error).map(r => r.message);
 
     if (errorMessages.length > 0) {
-      await interaction.followUp({ content: `오류가 발생했습니다:\n${errorMessages.join('\n')}`, ephemeral: true });
+      await interaction.followUp({ content: `오류가 발생했습니다:\n${errorMessages.join('\n')}`, flags: MessageFlags.Ephemeral });
     }
 
     if (validResults.length === 0) {
-      return interaction.editReply({ content: '랭킹을 표시할 유저 정보가 없습니다.' });
+      return interaction.editReply({ content: '랭킹을 표시할 유저 정보가 없습니다.', flags: MessageFlags.Ephemeral });
     }
 
     validResults.sort(strategy.sorter);

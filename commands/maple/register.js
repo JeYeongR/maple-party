@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const { readDB, writeDB } = require('../../utils/db');
 const { getFullDataByName } = require('../../utils/nexon-api');
 
@@ -11,7 +11,7 @@ module.exports = {
         .setDescription('등록할 메이플 아이디')
         .setRequired(true)),
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const characterName = interaction.options.getString('아이디');
     const discordId = interaction.user.id;
@@ -19,7 +19,7 @@ module.exports = {
     const characterData = await getFullDataByName(characterName);
 
     if (characterData.error) {
-      return interaction.editReply({ content: characterData.message });
+      return interaction.editReply({ content: characterData.message, flags: MessageFlags.Ephemeral });
     }
 
     const db = readDB();
