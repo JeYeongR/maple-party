@@ -2,14 +2,14 @@ const { ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const { updateCell, getRangeData } = require('../../utils/google-sheets-util');
 
 async function handleButtonInteraction(interaction) {
-  if (interaction.customId.startsWith('boss-')) {
+  if (interaction.customId.startsWith('boss-clear-')) {
     await interaction.deferUpdate();
 
     try {
       const parts = interaction.customId.split('-');
-      const character = parts[1];
-      const row = parts[2];
-      const col = parts[3];
+      const character = parts[2];
+      const row = parts[3];
+      const col = parts[4];
 
       const range = `'${character}'!${col}${row}`;
       const cellData = await getRangeData(range);

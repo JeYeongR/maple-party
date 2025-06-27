@@ -1,7 +1,6 @@
 const { google } = require('googleapis');
 const path = require('path');
 
-const KEY_FILE_PATH = path.join(process.cwd(), process.env.GOOGLE_SHEETS_KEY_FILE_PATH);
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 function numberToColumnLetter(num) {
@@ -15,10 +14,16 @@ function numberToColumnLetter(num) {
 }
 
 async function getGoogleSheetClient() {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: KEY_FILE_PATH,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-  });
+  const scopes = ['https://www.googleapis.com/auth/spreadsheets'];
+
+  if (!process.env.GOOGLE_CREDENTIALS_JSON) {
+    throw new Error('GOOGLE_CREDENTIALS_JSON 환경 변수를 설정해야 합니다.');
+  }
+
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+  const authOptions = { credentials, scopes };
+
+  const auth = new google.auth.GoogleAuth(authOptions);
   const client = await auth.getClient();
   return google.sheets({ version: 'v4', auth: client });
 }

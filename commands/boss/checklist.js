@@ -37,7 +37,7 @@ module.exports = {
         for (const boss of bossList) {
             const checkboxColIndex = 2 + (week - 1) * 2;
             const checkboxCol = numberToColumnLetter(checkboxColIndex);
-            const customId = `boss-clear_${character}_${boss.row}_${checkboxCol}`;
+            const customId = `boss-clear-${character}-${boss.row}-${checkboxCol}`;
 
             const button = new ButtonBuilder()
                 .setCustomId(customId)
