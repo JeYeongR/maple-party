@@ -27,5 +27,13 @@ module.exports = {
     writeDB(db);
 
     await interaction.editReply({ content: `'${characterData.characterName}'(으)로 메이플 아이디 등록이 완료되었습니다!` });
+
+    setTimeout(() => {
+      interaction.deleteReply().catch(error => {
+        if (error.code !== 10008) {
+          console.error('등록 완료 메시지 삭제 중 오류 발생:', error);
+        }
+      });
+    }, 30000); // 30초
   },
 };

@@ -64,5 +64,13 @@ module.exports = {
             content: `**${character}님, ${week}주차 보스 체크리스트**`,
             components: rows,
         });
+
+        setTimeout(() => {
+            interaction.deleteReply().catch(error => {
+                if (error.code !== 10008) {
+                    console.error('등록 완료 메시지 삭제 중 오류 발생:', error);
+                }
+            });
+        }, 300000); // 5분
     },
 };
