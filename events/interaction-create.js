@@ -1,31 +1,37 @@
-const { Events, MessageFlags } = require('discord.js');
+const { Events } = require('discord.js');
+const { handleButtonInteraction } = require('./handlers/button-handler');
 
 module.exports = {
 	name: Events.InteractionCreate,
 	async execute(interaction) {
-		if (!interaction.isChatInputCommand()) return;
+		if (interaction.isChatInputCommand()) {
+			const command = interaction.client.commands.get(interaction.commandName);
 
-		const command = interaction.client.commands.get(interaction.commandName);
+			if (!command) {
+				console.error(`No command matching ${interaction.commandName} was found.`);
+				return;
+			}
 
-		if (!command) {
-			console.error(`No command matching ${interaction.commandName} was found.`);
-			return;
-		}
-
-		if (interaction.guild) {
-			console.log(`[COMMAND] /${interaction.commandName} used by (${interaction.user.globalName}) ${interaction.user.tag} in ${interaction.guild.name}#${interaction.channel.name}`);
-		} else {
-			console.log(`[COMMAND] /${interaction.commandName} used by (${interaction.user.globalName}) ${interaction.user.tag} in DMs`);
-		}
-
-		try {
-			await command.execute(interaction);
-		} catch (error) {
-			console.error(error);
-			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-			} else {
-				await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
+			try {
+				await command.execute(interaction);
+			} catch (error) {
+				console.error(`Error executing command ${interaction.commandName}:`, error);
+				if (interaction.replied || interaction.deferred) {
+					await interaction.followUp({ content: '명령어 실행 중 오류가 발생했습니다!', ephemeral: true });
+				} else {
+					await interaction.reply({ content: '명령어 실행 중 오류가 발생했습니다!', ephemeral: true });
+				}
+			}
+		} else if (interaction.isButton()) {
+			try {
+				await handleButtonInteraction(interaction);
+			} catch (error) {
+				console.error('Error handling button interaction:', error);
+				if (interaction.replied || interaction.deferred) {
+					await interaction.followUp({ content: '버튼 처리 중 오류가 발생했습니다!', ephemeral: true });
+				} else {
+					await interaction.reply({ content: '버튼 처리 중 오류가 발생했습니다!', ephemeral: true });
+				}
 			}
 		}
 	},
