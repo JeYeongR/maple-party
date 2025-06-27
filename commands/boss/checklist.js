@@ -1,14 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { getBossList, numberToColumnLetter } = require('../../utils/google-sheets-util');
 const { readDB } = require('../../utils/db');
-
-const startDate = new Date('2025-06-18T00:00:00+09:00');
-function getCurrentWeek() {
-    const today = new Date();
-    const diffTime = Math.abs(today - startDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.floor(diffDays / 7) + 1;
-}
+const { getCurrentWeek } = require('../../utils/date-util');
 
 module.exports = {
     data: new SlashCommandBuilder()

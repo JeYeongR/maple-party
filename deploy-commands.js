@@ -13,7 +13,8 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
     console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
     const data = await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      // Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, '1387612331386863626'),
       { body: commands },
     );
 
