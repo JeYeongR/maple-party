@@ -1,4 +1,4 @@
-const { ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
+const { ButtonStyle, ActionRowBuilder, ButtonBuilder, MessageFlags } = require('discord.js');
 const { updateCell, getRangeData } = require('../../utils/google-sheets-util');
 
 async function handleButtonInteraction(interaction) {
@@ -15,7 +15,7 @@ async function handleButtonInteraction(interaction) {
       const cellData = await getRangeData(range);
 
       if (!cellData || !cellData[0]) {
-        await interaction.followUp({ content: '❌ 시트에서 값을 읽어오는 데 실패했습니다.', ephemeral: true });
+        await interaction.followUp({ content: '❌ 시트에서 값을 읽어오는 데 실패했습니다.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -49,12 +49,12 @@ async function handleButtonInteraction(interaction) {
 
         await interaction.editReply({ components });
       } else {
-        await interaction.followUp({ content: '❌ 시트 업데이트에 실패했습니다. 관리자에게 문의해주세요.', ephemeral: true });
+        await interaction.followUp({ content: '❌ 시트 업데이트에 실패했습니다. 관리자에게 문의해주세요.', flags: MessageFlags.Ephemeral });
       }
     } catch (error) {
       console.error('버튼 상호작용 처리 중 오류 발생:', error);
       try {
-        await interaction.followUp({ content: '오류가 발생하여 작업을 완료할 수 없습니다. 잠시 후 다시 시도해주세요.', ephemeral: true });
+        await interaction.followUp({ content: '오류가 발생하여 작업을 완료할 수 없습니다. 잠시 후 다시 시도해주세요.', flags: MessageFlags.Ephemeral });
       } catch (followUpError) {
         // 추가하기
       }

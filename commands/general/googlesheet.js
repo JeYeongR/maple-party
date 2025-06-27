@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,7 +7,7 @@ module.exports = {
   async execute(interaction) {
     const spreadsheetId = process.env.SPREADSHEET_ID;
     if (!spreadsheetId) {
-      await interaction.reply({ content: '오류: 구글 시트 ID가 설정되지 않았습니다. 관리자에게 문의하세요.', ephemeral: true });
+      await interaction.reply({ content: '오류: 구글 시트 ID가 설정되지 않았습니다. 관리자에게 문의하세요.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -24,7 +24,7 @@ module.exports = {
     await interaction.reply({
       content: '아래 버튼을 클릭하여 구글 시트를 열 수 있습니다.',
       components: [row],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     setTimeout(() => {

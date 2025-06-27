@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { getBossList, numberToColumnLetter } = require('../../utils/google-sheets-util');
 const { readDB } = require('../../utils/db');
 const { getCurrentWeek } = require('../../utils/date-util');
@@ -22,7 +22,7 @@ module.exports = {
             week = getCurrentWeek();
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const bossList = await getBossList(character, week);
 

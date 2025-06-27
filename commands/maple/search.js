@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 const { getFullDataByName } = require('../../utils/nexon-api');
 const { WORLD_ICONS, MAIN_COLOR } = require('../../utils/constants');
 const { formatCombatPower } = require('../../utils/formatting');
@@ -19,7 +19,7 @@ module.exports = {
     const data = await getFullDataByName(characterNameInput);
 
     if (data.error) {
-      return interaction.editReply({ content: data.message, ephemeral: true });
+      return interaction.editReply({ content: data.message, flags: MessageFlags.Ephemeral });
     }
 
     const { characterName, combatPower, character_level, character_exp_rate, character_class, character_image, world_name } = data;
