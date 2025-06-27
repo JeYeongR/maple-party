@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { nexonApiQueue } = require('./api-queue');
 
 const api = axios.create({
     baseURL: 'https://open.api.nexon.com/maplestory/v1',
@@ -9,7 +10,7 @@ const api = axios.create({
 
 async function getOcid(characterName) {
     try {
-        const response = await api.get(`/id?character_name=${encodeURIComponent(characterName)}`);
+        const response = await nexonApiQueue.add(() => api.get(`/id?character_name=${encodeURIComponent(characterName)}`));
         return response.data.ocid;
     } catch (error) {
         console.error(`Error fetching OCID for ${characterName}:`, error.response ? error.response.data : error.message);
@@ -20,7 +21,7 @@ async function getOcid(characterName) {
 async function getCharacterStats(ocid) {
     if (!ocid) return null;
     try {
-        const response = await api.get(`/character/stat?ocid=${ocid}`);
+        const response = await nexonApiQueue.add(() => api.get(`/character/stat?ocid=${ocid}`));
         return response.data;
     } catch (error) {
         console.error(`Error fetching stats for OCID ${ocid}:`, error.response ? error.response.data : error.message);
@@ -31,7 +32,7 @@ async function getCharacterStats(ocid) {
 async function getCharacterBasic(ocid) {
     if (!ocid) return null;
     try {
-        const response = await api.get(`/character/basic?ocid=${ocid}`);
+        const response = await nexonApiQueue.add(() => api.get(`/character/basic?ocid=${ocid}`));
         return response.data;
     } catch (error) {
         console.error(`Error fetching basic info for OCID ${ocid}:`, error.response ? error.response.data : error.message);
@@ -45,10 +46,8 @@ async function getFullDataByName(characterName) {
         return { error: 'NOT_FOUND', message: `캐릭터(${characterName})를 찾을 수 없습니다.` };
     }
 
-    const [statInfo, basicInfo] = await Promise.all([
-        getCharacterStats(ocid),
-        getCharacterBasic(ocid),
-    ]);
+    const statInfo = await getCharacterStats(ocid);
+    const basicInfo = await getCharacterBasic(ocid);
 
     if (!statInfo || !basicInfo) {
         return { error: 'API_ERROR', message: `캐릭터(${characterName}) 정보를 가져오는데 실패했습니다.` };
