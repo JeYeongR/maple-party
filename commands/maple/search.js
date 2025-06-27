@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getFullDataByName } = require('../../utils/nexon-api');
 const { WORLD_ICONS, MAIN_COLOR } = require('../../utils/constants');
 const { formatCombatPower } = require('../../utils/formatting');
+const { replyAndDestroy } = require('../../utils/interaction-util');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,8 +19,8 @@ module.exports = {
     const characterNameInput = interaction.options.getString('캐릭터_이름');
     const data = await getFullDataByName(characterNameInput);
 
-    if (data.error) {
-      return interaction.editReply({ content: data.message, flags: MessageFlags.Ephemeral });
+        if (data.error) {
+      return replyAndDestroy(interaction, data.message);
     }
 
     const { characterName, combatPower, character_level, character_exp_rate, character_class, character_image, world_name } = data;

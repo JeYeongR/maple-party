@@ -1,38 +1,37 @@
 const { Events } = require('discord.js');
 const { handleButtonInteraction } = require('./handlers/button-handler');
-const { MessageFlags } = require('discord.js');
+const { replyAndDestroy, followUpAndDestroy } = require('../utils/interaction-util');
 
 module.exports = {
 	name: Events.InteractionCreate,
 	async execute(interaction) {
-		if (interaction.isChatInputCommand()) {
-			const command = interaction.client.commands.get(interaction.commandName);
+		try {
+			if (interaction.isChatInputCommand()) {
+				console.log(`[COMMAND] /${interaction.commandName} by ${interaction.user.tag} in ${interaction.guild.name}`);
+				const command = interaction.client.commands.get(interaction.commandName);
 
-			if (!command) {
-				console.error(`No command matching ${interaction.commandName} was found.`);
-				return;
-			}
-
-			try {
+				if (!command) {
+					console.error(`No command matching ${interaction.commandName} was found.`);
+					return;
+				}
 				await command.execute(interaction);
-			} catch (error) {
-				console.error(`Error executing command ${interaction.commandName}:`, error);
-				if (interaction.replied || interaction.deferred) {
-					await interaction.followUp({ content: '명령어 실행 중 오류가 발생했습니다!', flags: MessageFlags.Ephemeral });
-				} else {
-					await interaction.reply({ content: '명령어 실행 중 오류가 발생했습니다!', flags: MessageFlags.Ephemeral });
-				}
-			}
-		} else if (interaction.isButton()) {
-			try {
+			} else if (interaction.isButton()) {
+				console.log(`[BUTTON] ${interaction.customId} by ${interaction.user.tag} in ${interaction.guild.name}`);
 				await handleButtonInteraction(interaction);
-			} catch (error) {
-				console.error('Error handling button interaction:', error);
-				if (interaction.replied || interaction.deferred) {
-					await interaction.followUp({ content: '버튼 처리 중 오류가 발생했습니다!', flags: MessageFlags.Ephemeral });
-				} else {
-					await interaction.reply({ content: '버튼 처리 중 오류가 발생했습니다!', flags: MessageFlags.Ephemeral });
-				}
+			}
+		} catch (error) {
+			let errorSource = 'An unknown interaction';
+			if (interaction.isChatInputCommand()) {
+				errorSource = `command ${interaction.commandName}`;
+			} else if (interaction.isButton()) {
+				errorSource = `button ${interaction.customId}`;
+			}
+			console.error(`Error executing ${errorSource}:`, error);
+
+			if (interaction.replied || interaction.deferred) {
+				await followUpAndDestroy(interaction, '처리 중 오류가 발생했습니다!');
+			} else {
+				await replyAndDestroy(interaction, '처리 중 오류가 발생했습니다!');
 			}
 		}
 	},

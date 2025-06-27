@@ -1,5 +1,6 @@
-const { ButtonStyle, ActionRowBuilder, ButtonBuilder, MessageFlags } = require('discord.js');
+const { ButtonStyle, ActionRowBuilder, ButtonBuilder } = require('discord.js');
 const { updateCell, getRangeData } = require('../../utils/google-sheets-util');
+const { followUpAndDestroy } = require('../../utils/interaction-util');
 
 async function handleButtonInteraction(interaction) {
   if (interaction.customId.startsWith('boss-clear-')) {
@@ -15,7 +16,7 @@ async function handleButtonInteraction(interaction) {
       const cellData = await getRangeData(range);
 
       if (!cellData || !cellData[0]) {
-        await interaction.followUp({ content: '❌ 시트에서 값을 읽어오는 데 실패했습니다.', flags: MessageFlags.Ephemeral });
+        await followUpAndDestroy(interaction, '❌ 시트에서 값을 읽어오는 데 실패했습니다.');
         return;
       }
 
@@ -49,14 +50,14 @@ async function handleButtonInteraction(interaction) {
 
         await interaction.editReply({ components });
       } else {
-        await interaction.followUp({ content: '❌ 시트 업데이트에 실패했습니다. 관리자에게 문의해주세요.', flags: MessageFlags.Ephemeral });
+        await followUpAndDestroy(interaction, '❌ 시트 업데이트에 실패했습니다. 관리자에게 문의해주세요.');
       }
     } catch (error) {
       console.error('버튼 상호작용 처리 중 오류 발생:', error);
       try {
-        await interaction.followUp({ content: '오류가 발생하여 작업을 완료할 수 없습니다. 잠시 후 다시 시도해주세요.', flags: MessageFlags.Ephemeral });
+        await followUpAndDestroy(interaction, '오류가 발생하여 작업을 완료할 수 없습니다. 잠시 후 다시 시도해주세요.');
       } catch (followUpError) {
-        // 추가하기
+        console.error('오류 메시지를 전송하는 데에도 실패했습니다:', followUpError);
       }
     }
   }
