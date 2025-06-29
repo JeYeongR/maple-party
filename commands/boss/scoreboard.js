@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getBossList } = require('../../utils/google-sheets-util');
 const { readDB } = require('../../utils/db');
 const { getCurrentWeek } = require('../../utils/date-util');
+const { MAIN_COLOR } = require('../../utils/constants');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -30,7 +31,7 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
+      .setColor(MAIN_COLOR)
       .setTitle(`🗓️ ${week}주차 보스 클리어 현황`)
       .setDescription('각 캐릭터별 남은 보스 목록입니다.');
 
