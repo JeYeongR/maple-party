@@ -1,6 +1,6 @@
 async function replyAndDestroy(interaction, content, duration = 10000) {
     try {
-        const options = { content, ephemeral: true };
+        const options = { content, flags: MessageFlags.Ephemeral };
 
         if (interaction.deferred || interaction.replied) {
             await interaction.editReply(options);
@@ -22,7 +22,7 @@ async function replyAndDestroy(interaction, content, duration = 10000) {
 
 async function followUpAndDestroy(interaction, content, duration = 10000) {
     try {
-        const message = await interaction.followUp({ content, ephemeral: true, fetchReply: true });
+        const message = await interaction.followUp({ content, flags: MessageFlags.Ephemeral, fetchReply: true });
         setTimeout(() => {
             interaction.deleteFollowUp(message.id).catch(error => {
                 if (error.code !== 10008) { // Unknown Message
